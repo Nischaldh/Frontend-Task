@@ -1,28 +1,51 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { STUDENTS } from "./constants/students";
 import StudentTable from "./components/StudentTable";
 import Statistics from "./components/Statistics";
 import StudentModal from "./components/StudentModal";
+import {
+  getStudents,
+  postStudent,
+  updateStudent,
+  deleteStudent,
+} from "./service/student.service.js";
 
 const App = () => {
-  const [students, setStudents] = useState(STUDENTS);
+  const [students, setStudents] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
 
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        const res = await getStudents();
+        const studentsWithStatus = res.data.students.map((s) => ({
+        ...s,
+        status: s.marks >= 40 ? "Pass" : "Fail",
+      }));
+        setStudents(studentsWithStatus);
+      } catch (err) {
+        toast.error("Failed to load students");
+        console.log(err);
+      }
+    };
+
+    fetchStudents();
+  }, [students]);
   const maleStudents = students.filter((s) => s.gender === "Male");
   const femaleStudents = students.filter((s) => s.gender === "Female");
 
-  const handleSaveStudent = (data) => {
+  const handleSaveStudent = async (data) => {
     if (editingStudent) {
+      const res = await updateStudent(editingStudent.id, data);
       setStudents((prev) =>
-        prev.map((s) => 
-          s.id === editingStudent.id ? { ...data, id: s.id } : s
-        ),
+        prev.map((s) => (s.id === editingStudent.id ? res.data : s)),
       );
       toast.success("Student updated successfully");
     } else {
-      setStudents((prev) => [...prev, { ...data, id: Date.now() }]);
+      const res = await postStudent(data);
+
+      setStudents((prev) => [...prev, res.data]);
       toast.success("Student added successfully");
     }
 
@@ -30,13 +53,14 @@ const App = () => {
     setShowModal(false);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete =  (id) => {
     toast((t) => (
       <div className="flex gap-3">
         <span>Delete this student?</span>
         <button
           className="text-red-400"
-          onClick={() => {
+          onClick={async () => {
+            await deleteStudent(id);
             setStudents((prev) => prev.filter((s) => s.id !== id));
             toast.dismiss(t.id);
             toast.success("Student deleted");
