@@ -21,7 +21,7 @@ export const postStudent = (data)=>{
 
 }
 
-export const updateStudent = (data,id)=>{
+export const updateStudent = (id,data)=>{
     return apiClient.put(`/students/${id}`,data)
 
 }

@@ -1,76 +1,81 @@
-import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
 import StudentTable from "./components/StudentTable";
 import Statistics from "./components/Statistics";
 import StudentModal from "./components/StudentModal";
-import {
-  getStudents,
-  postStudent,
-  updateStudent,
-  deleteStudent,
-} from "./service/student.service.js";
+
+import useStudents from "./hooks/useStudent.jsx";
 
 const App = () => {
-  const [students, setStudents] = useState([]);
-  const [showModal, setShowModal] = useState(false);
-  const [editingStudent, setEditingStudent] = useState(null);
+  const {
+    students,
+    showModal,
+    editingStudent,
+    saveStudent,
+    removeStudent,
+    setShowModal,
+    setEditingStudent,
+  } = useStudents();
 
-  useEffect(() => {
-    const fetchStudents = async () => {
-      try {
-        const res = await getStudents();
-        const studentsWithStatus = res.data.students.map((s) => ({
-        ...s,
-        status: s.marks >= 40 ? "Pass" : "Fail",
-      }));
-        setStudents(studentsWithStatus);
-      } catch (err) {
-        toast.error("Failed to load students");
-        console.log(err);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchStudents = async () => {
+  //     try {
+  //       const res = await getStudents();
+  //       const studentsWithStatus = res.data.students.map((s) => ({
+  //         ...s,
+  //         status: s.marks >= 40 ? "Pass" : "Fail",
+  //       }));
+  //       setStudents(studentsWithStatus);
+  //     } catch (err) {
+  //       toast.error("Failed to load students");
+  //       console.log(err);
+  //     }
+  //   };
 
-    fetchStudents();
-  }, [students]);
+  //   fetchStudents();
+  // }, []);
   const maleStudents = students.filter((s) => s.gender === "Male");
   const femaleStudents = students.filter((s) => s.gender === "Female");
 
-  const handleSaveStudent = async (data) => {
-    if (editingStudent) {
-      const res = await updateStudent(editingStudent.id, data);
-      setStudents((prev) =>
-        prev.map((s) => (s.id === editingStudent.id ? res.data : s)),
-      );
-      toast.success("Student updated successfully");
-    } else {
-      const res = await postStudent(data);
+  // const handleSaveStudent = async (data) => {
+  //   if (editingStudent) {
+  //     const res = await updateStudent(editingStudent.id, data);
+  //     const updatedStudent = {
+  //       ...res.data.student,
+  //       status: res.data.student.marks >= 40 ? "Pass" : "Fail",
+  //     };
 
-      setStudents((prev) => [...prev, res.data]);
-      toast.success("Student added successfully");
-    }
+  //     setStudents((prev) =>
+  //       prev.map((s) => (s.id === editingStudent.id ? updatedStudent : s)),
+  //     );
+  //     toast.success("Student updated successfully");
+  //   } else {
+  //     const res = await postStudent(data);
 
-    setEditingStudent(null);
-    setShowModal(false);
-  };
+  //     setStudents((prev) => [...prev, res.data]);
+  //     toast.success("Student added successfully");
+  //   }
 
-  const handleDelete =  (id) => {
-    toast((t) => (
-      <div className="flex gap-3">
-        <span>Delete this student?</span>
-        <button
-          className="text-red-400"
-          onClick={async () => {
-            await deleteStudent(id);
-            setStudents((prev) => prev.filter((s) => s.id !== id));
-            toast.dismiss(t.id);
-            toast.success("Student deleted");
-          }}
-        >
-          Yes
-        </button>
-      </div>
-    ));
-  };
+  //   setEditingStudent(null);
+  //   setShowModal(false);
+  // };
+
+  // const handleDelete = (id) => {
+  //   toast((t) => (
+  //     <div className="flex gap-3">
+  //       <span>Delete this student?</span>
+  //       <button
+  //         className="text-red-400"
+  //         onClick={async () => {
+  //           await deleteStudent(id);
+  //           setStudents((prev) => prev.filter((s) => s.id !== id));
+  //           toast.dismiss(t.id);
+  //           toast.success("Student deleted");
+  //         }}
+  //       >
+  //         Yes
+  //       </button>
+  //     </div>
+  //   ));
+  // };
 
   return (
     <main className="min-h-screen bg-gray-900 text-white p-8">
@@ -98,7 +103,7 @@ const App = () => {
                 setEditingStudent(s);
                 setShowModal(true);
               }}
-              onDelete={handleDelete}
+              onDelete={removeStudent}
             />
           </div>
           <Statistics title="Male Statistics" students={maleStudents} />
@@ -113,7 +118,7 @@ const App = () => {
                 setEditingStudent(s);
                 setShowModal(true);
               }}
-              onDelete={handleDelete}
+              onDelete={removeStudent}
             />
           </div>
           <Statistics title="Female Statistics" students={femaleStudents} />
@@ -126,7 +131,7 @@ const App = () => {
           setShowModal(false);
           setEditingStudent(null);
         }}
-        onSave={handleSaveStudent}
+        onSave={saveStudent}
         student={editingStudent}
         students={students}
       />

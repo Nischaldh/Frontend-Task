@@ -74,7 +74,7 @@ const StudentModal = ({ isOpen, onClose, onSave, student, students }) => {
                 const duplicate = students.find(
                   (s) =>
                     s.rollNo === value &&
-                    s.id !== student?.id // 👈 allow same student while editing
+                    s.id !== student?.id 
                 );
                 return duplicate
                   ? "Roll No already exists"
